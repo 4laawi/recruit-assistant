@@ -1,10 +1,10 @@
 'use client'
 
 import { Button } from "@/components/ui/button"
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { FileText, Brain, Target, Clock, ArrowRight, Menu } from "lucide-react"
+import { FileText, Brain, Target, Clock, ArrowRight } from "lucide-react"
 import Link from "next/link"
 import { useAuth } from "@/contexts/AuthContext"
 

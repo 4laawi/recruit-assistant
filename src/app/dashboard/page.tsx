@@ -11,7 +11,7 @@ export default function DashboardPage() {
         <div>
           <h1 className="text-3xl font-bold">Dashboard</h1>
           <p className="text-muted-foreground">
-            Welcome back! Here's what's happening with your recruitment.
+            Welcome back! Here&apos;s what&apos;s happening with your recruitment.
           </p>
         </div>
         <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
