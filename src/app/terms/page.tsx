@@ -16,7 +16,7 @@ export default function TermsOfService() {
               <section>
                 <h2 className="text-2xl font-semibold text-gray-900 mb-4">1. Acceptance of Terms</h2>
                 <p className="text-gray-700">
-                  By accessing and using Recruit Assistant ("the Service"), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.
+                  By accessing and using Recruit Assistant (&ldquo;the Service&rdquo;), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.
                 </p>
               </section>
 
@@ -114,7 +114,7 @@ export default function TermsOfService() {
                 <div className="space-y-4">
                   <h3 className="text-xl font-medium text-gray-800">Service Disclaimer</h3>
                   <p className="text-gray-700">
-                    The service is provided "as is" without warranties of any kind, either express or implied. We disclaim all warranties, including but not limited to:
+                    The service is provided &ldquo;as is&rdquo; without warranties of any kind, either express or implied. We disclaim all warranties, including but not limited to:
                   </p>
                   <ul className="list-disc list-inside space-y-2 text-gray-700 ml-4 mt-4">
                     <li>Warranties of merchantability and fitness for a particular purpose</li>
