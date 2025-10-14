@@ -18,6 +18,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
+import Image from "next/image"
 
 export default function DashboardLayout({
   children,
@@ -81,9 +82,13 @@ export default function DashboardLayout({
           </Button>
           
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center">
-              <Server className="w-4 h-4 text-white" />
-            </div>
+            <Image 
+              src="/Recruit-Helper_Logo.webp" 
+              alt="Recruit Assistant Logo" 
+              width={32} 
+              height={32}
+              className="h-8 w-8"
+            />
             <span className="font-bold text-lg">Recruit Assistant</span>
           </div>
           

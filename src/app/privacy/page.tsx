@@ -148,9 +148,9 @@ export default function PrivacyPolicy() {
                 </p>
                 <div className="bg-gray-50 p-4 rounded-lg mt-4">
                   <p className="text-gray-700">
-                    <strong>Email:</strong> privacy@recruitassistant.com<br />
-                    <strong>Address:</strong> [Your Company Address]<br />
-                    <strong>Phone:</strong> [Your Contact Number]
+                  <strong>Email:</strong> legal@recruitassistant.com<br />
+                    <strong>Address:</strong> 123 Main St, Rabat, Morocco<br />
+                    <strong>Phone:</strong> +212 6 63 71 11 64  
                   </p>
                 </div>
               </section>

@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { FileText, Brain, Target, Clock, ArrowRight } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 import { useAuth } from "@/contexts/AuthContext"
 
 export default function Home() {
@@ -17,7 +18,13 @@ export default function Home() {
       <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-md border-b z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <Brain className="h-8 w-8 text-blue-600" />
+            <Image 
+              src="/Recruit-Helper_Logo.webp" 
+              alt="Recruit Assistant Logo" 
+              width={32} 
+              height={32}
+              className="h-8 w-8"
+            />
             <span className="text-xl font-bold">Recruit Assistant</span>
           </div>
           <div className="flex items-center space-x-4">
@@ -170,7 +177,13 @@ export default function Home() {
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
             <div className="flex items-center space-x-2">
-              <Brain className="h-6 w-6 text-blue-600" />
+              <Image 
+                src="/Recruit-Helper_Logo.webp" 
+                alt="Recruit Assistant Logo" 
+                width={24} 
+                height={24}
+                className="h-6 w-6"
+              />
               <span className="font-semibold">Recruit Assistant</span>
             </div>
             <div className="flex items-center space-x-6">

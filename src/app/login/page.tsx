@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Chrome, ArrowLeft, Loader2 } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 import { useAuth } from "@/contexts/AuthContext"
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
@@ -51,9 +52,13 @@ export default function LoginPage() {
         <Card className="p-8 shadow-lg">
           <CardHeader className="text-center pb-6">
             <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center">
-                <Chrome className="w-8 h-8 text-white" />
-              </div>
+              <Image 
+                src="/Recruit-Helper_Logo.webp" 
+                alt="Recruit Assistant Logo" 
+                width={64} 
+                height={64}
+                className="w-16 h-16"
+              />
             </div>
             <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
             <CardDescription>
