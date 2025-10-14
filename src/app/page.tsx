@@ -168,14 +168,22 @@ export default function Home() {
       {/* Footer */}
       <footer className="border-t bg-white">
         <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
             <div className="flex items-center space-x-2">
               <Brain className="h-6 w-6 text-blue-600" />
               <span className="font-semibold">Recruit Assistant</span>
             </div>
-            <p className="text-sm text-muted-foreground">
-              © 2024 Recruit Assistant. All rights reserved.
-            </p>
+            <div className="flex items-center space-x-6">
+              <Link href="/privacy" className="text-sm text-muted-foreground hover:text-gray-900 transition-colors">
+                Privacy Policy
+              </Link>
+              <Link href="/terms" className="text-sm text-muted-foreground hover:text-gray-900 transition-colors">
+                Terms of Service
+              </Link>
+              <p className="text-sm text-muted-foreground">
+                © 2024 Recruit Assistant. All rights reserved.
+              </p>
+            </div>
           </div>
         </div>
       </footer>

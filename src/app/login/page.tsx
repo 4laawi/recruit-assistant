@@ -90,13 +90,17 @@ export default function LoginPage() {
             <div className="text-center">
               <p className="text-sm text-muted-foreground">
                 By signing in, you agree to our{" "}
-                <Button variant="link" className="p-0 h-auto text-sm">
-                  Terms of Service
-                </Button>{" "}
+                <Link href="/terms">
+                  <Button variant="link" className="p-0 h-auto text-sm">
+                    Terms of Service
+                  </Button>
+                </Link>{" "}
                 and{" "}
-                <Button variant="link" className="p-0 h-auto text-sm">
-                  Privacy Policy
-                </Button>
+                <Link href="/privacy">
+                  <Button variant="link" className="p-0 h-auto text-sm">
+                    Privacy Policy
+                  </Button>
+                </Link>
               </p>
             </div>
           </CardContent>
