@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
-import { User, Session } from '@supabase/supabase-js'
+import { User, Session, AuthError } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabaseClient'
 
 interface AuthContextType {
@@ -9,6 +9,9 @@ interface AuthContextType {
   session: Session | null
   loading: boolean
   signInWithGoogle: () => Promise<void>
+  signInWithEmail: (email: string, password: string) => Promise<{ error: AuthError | null }>
+  signUpWithEmail: (email: string, password: string, fullName?: string) => Promise<{ error: AuthError | null }>
+  resetPassword: (email: string) => Promise<{ error: AuthError | null }>
   signOut: () => Promise<void>
 }
 
@@ -65,11 +68,58 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const signInWithEmail = async (email: string, password: string) => {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+      return { error }
+    } catch (error) {
+      console.error('Error signing in with email:', error)
+      return { error }
+    }
+  }
+
+  const signUpWithEmail = async (email: string, password: string, fullName?: string) => {
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/dashboard`,
+          data: {
+            full_name: fullName || '',
+          }
+        }
+      })
+      return { error }
+    } catch (error) {
+      console.error('Error signing up with email:', error)
+      return { error }
+    }
+  }
+
+  const resetPassword = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`
+      })
+      return { error }
+    } catch (error) {
+      console.error('Error resetting password:', error)
+      return { error }
+    }
+  }
+
   const value = {
     user,
     session,
     loading,
     signInWithGoogle,
+    signInWithEmail,
+    signUpWithEmail,
+    resetPassword,
     signOut
   }
 

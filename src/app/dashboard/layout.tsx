@@ -1,24 +1,18 @@
 'use client'
 
-import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Separator } from "@/components/ui/separator"
+import { Badge } from "@/components/ui/badge"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { 
   Home, 
-  Server, 
-  FileText, 
+  Briefcase,
+  Users,
   BarChart, 
   Settings, 
-  Bell, 
-  Menu,
-  User,
-  LogOut
+  HelpCircle
 } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import { useEffect } from "react"
-import Image from "next/image"
 
 export default function DashboardLayout({
   children,
@@ -27,6 +21,7 @@ export default function DashboardLayout({
 }) {
   const { user, signOut, loading } = useAuth()
   const router = useRouter()
+  const pathname = usePathname()
 
   useEffect(() => {
     if (!loading && !user) {
@@ -43,19 +38,44 @@ export default function DashboardLayout({
     }
   }
 
-  const getUserInitials = (email: string) => {
-    return email.split('@')[0].substring(0, 2).toUpperCase()
+  const getUserInitials = (user: any) => {
+    const fullName = user?.user_metadata?.full_name
+    if (fullName) {
+      const names = fullName.split(' ')
+      if (names.length >= 2) {
+        return (names[0][0] + names[names.length - 1][0]).toUpperCase()
+      }
+      return fullName.substring(0, 2).toUpperCase()
+    }
+    return user?.email?.split('@')[0].substring(0, 2).toUpperCase() || 'U'
   }
 
-  const getUserDisplayName = (email: string) => {
+  const getUserDisplayName = (user: any) => {
+    const fullName = user?.user_metadata?.full_name
+    if (fullName) {
+      return fullName
+    }
+    const email = user?.email || ''
     const name = email.split('@')[0]
     return name.charAt(0).toUpperCase() + name.slice(1)
   }
 
+  const getUserAvatar = (user: any) => {
+    // Try to get Google profile picture
+    if (user?.user_metadata?.avatar_url) {
+      return user.user_metadata.avatar_url
+    }
+    // Try alternative Google picture URL
+    if (user?.user_metadata?.picture) {
+      return user.user_metadata.picture
+    }
+    return null
+  }
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-[#f6f6f6]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
       </div>
     )
   }
@@ -65,95 +85,74 @@ export default function DashboardLayout({
   }
 
   const navItems = [
-    { icon: Home, label: 'Dashboard', href: '/dashboard', active: true },
-    { icon: Server, label: 'AI Servers', href: '/dashboard/servers' },
-    { icon: FileText, label: 'Resumes', href: '/dashboard/resumes' },
-    { icon: BarChart, label: 'Analytics', href: '/dashboard/analytics' },
+    { icon: Home, label: 'Home', href: '/dashboard' },
+    { icon: Briefcase, label: 'Job listings', href: '/dashboard/jobs' },
+    { icon: Users, label: 'Candidates', href: '/dashboard/candidates', badge: 'New' },
+    { icon: BarChart, label: 'Reports', href: '/dashboard/reports' },
     { icon: Settings, label: 'Settings', href: '/dashboard/settings' },
   ]
 
+  const isActive = (href: string) => pathname === href
+
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Top Navigation Bar */}
-      <header className="border-b bg-white sticky top-0 z-10">
-        <div className="flex h-16 items-center px-6 gap-4">
-          <Button variant="ghost" size="icon" className="md:hidden">
-            <Menu className="h-5 w-5" />
-          </Button>
-          
-          <div className="flex items-center space-x-2">
-            <Image 
-              src="/Recruit-Helper_Logo.webp" 
-              alt="Recruit Assistant Logo" 
-              width={32} 
-              height={32}
-              className="h-8 w-8"
-            />
-            <span className="font-bold text-lg">Recruit Assistant</span>
+    <div className="min-h-screen bg-[#f6f6f6] flex">
+      {/* Sidebar - Seamless with background */}
+      <aside className="w-[280px] h-screen sticky top-0 flex flex-col">
+        {/* User Profile Section */}
+        <div className="p-4">
+          <div className="flex items-center gap-3 mb-6">
+            <Avatar className="w-10 h-10 border-2 border-gray-200">
+              <AvatarImage src={getUserAvatar(user) || undefined} alt={getUserDisplayName(user)} />
+              <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white font-semibold">
+                {getUserInitials(user)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <p className="text-base font-bold text-black truncate">{getUserDisplayName(user)}</p>
+              <p className="text-xs text-[#606160] truncate">{user.email}</p>
+            </div>
           </div>
-          
-          <div className="flex-1" />
-          
-          <Button variant="ghost" size="icon">
-            <Bell className="h-5 w-5" />
-          </Button>
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                <Avatar>
-                  <AvatarFallback className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-                    {getUserInitials(user.email || '')}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <div className="px-2 py-1.5">
-                <p className="text-sm font-medium">{getUserDisplayName(user.email || '')}</p>
-                <p className="text-xs text-muted-foreground">{user.email}</p>
-              </div>
-              <Separator />
-              <DropdownMenuItem>
-                <User className="mr-2 h-4 w-4" />
-                Profile
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                Settings
-              </DropdownMenuItem>
-              <Separator />
-              <DropdownMenuItem onClick={handleSignOut}>
-                <LogOut className="mr-2 h-4 w-4" />
-                Logout
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </header>
-
-      <div className="flex">
-        {/* Sidebar */}
-        <div className="w-64 border-r bg-white h-screen sticky top-16">
-          <nav className="px-4 py-6 space-y-1">
-            {navItems.map((item) => (
-              <Button
-                key={item.href}
-                variant={item.active ? "secondary" : "ghost"}
-                className="w-full justify-start"
-              >
-                <item.icon className="mr-2 h-4 w-4" />
-                {item.label}
-              </Button>
-            ))}
-          </nav>
         </div>
 
-        {/* Main Content */}
-        <main className="flex-1 p-6">
+        {/* Navigation */}
+        <nav className="flex-1 px-3 py-4 space-y-1">
+          {navItems.map((item) => (
+            <button
+              key={item.href}
+              onClick={() => router.push(item.href)}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-normal transition-colors ${
+                isActive(item.href)
+                  ? 'bg-[#ededed] text-black'
+                  : 'text-black hover:bg-[#ededed]/50'
+              }`}
+            >
+              <item.icon className="h-4 w-4 shrink-0" />
+              <span className="flex-1 text-left">{item.label}</span>
+              {item.badge && (
+                <Badge className="bg-[#d9f7d7] text-[#149610] text-xs px-2 py-0 border-0 hover:bg-[#d9f7d7]">
+                  {item.badge}
+                </Badge>
+              )}
+            </button>
+          ))}
+        </nav>
+
+        {/* Help Center - Bottom */}
+        <div className="p-3">
+          <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-normal text-black hover:bg-[#ededed]/50 transition-colors">
+            <HelpCircle className="h-4 w-4 shrink-0" />
+            <span>Help Center</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Content Area */}
+      <main className="flex-1 flex flex-col min-h-screen pt-4">
+        {/* White Container with Rounded Top-Left */}
+        <div className="flex-1 bg-white border-l border-[#e7e8e7] rounded-tl-[19px] p-8 overflow-auto">
           {children}
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
   )
 }

@@ -1,7 +1,6 @@
 ---
 alwaysApply: true
 ---
-
 Usage Rule
 When asked to use shadcn components, use the MCP server.
 Planning Rule 

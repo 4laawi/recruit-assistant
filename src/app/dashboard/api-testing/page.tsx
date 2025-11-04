@@ -1,0 +1,590 @@
+'use client'
+
+import { useState } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { 
+  FlaskConical, 
+  Loader2,
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
+  Clock,
+  TrendingUp,
+  FileText,
+  Upload
+} from "lucide-react"
+
+interface APIResponse {
+  candidate_name?: string
+  candidate_email?: string
+  score: number
+  skills_found: string[]
+  skills_missing: string[]
+  years_of_experience: number
+  is_good_fit: boolean
+  reasoning: string
+  processing_time_ms: number
+  used_provider?: 'primary' | 'fallback'
+}
+
+export default function APITestingPage() {
+  const [jobTitle, setJobTitle] = useState('')
+  const [requiredSkills, setRequiredSkills] = useState('')
+  const [experienceLevel, setExperienceLevel] = useState('')
+  const [jobDescription, setJobDescription] = useState('')
+  const [cvContent, setCvContent] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [result, setResult] = useState<APIResponse | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [usedProviderBadge, setUsedProviderBadge] = useState<'primary' | 'fallback' | null>(null)
+
+  // OCR States
+  const [ocrFile, setOcrFile] = useState<File | null>(null)
+  const [isOcrLoading, setIsOcrLoading] = useState(false)
+  const [ocrResult, setOcrResult] = useState<string>('')
+  const [ocrError, setOcrError] = useState<string | null>(null)
+
+  const handleTest = async () => {
+    if (!jobTitle.trim() || !requiredSkills.trim() || !experienceLevel || !cvContent.trim()) {
+      setError('Please fill in all required fields')
+      return
+    }
+
+    setIsLoading(true)
+    setError(null)
+    setResult(null)
+    setUsedProviderBadge(null)
+
+    try {
+      // Parse skills correctly from comma-separated input
+      const skillsArray = requiredSkills
+        .split(',')
+        .map(s => s.trim().toLowerCase())
+        .filter(s => s.length > 0)
+
+      const payload = {
+        resume_text: cvContent,
+        job_requirements: {
+          job_title: jobTitle,
+          required_skills: skillsArray, // ✅ CORRECT: Array format
+          experience_level: experienceLevel,
+          job_description: jobDescription || ""
+        }
+      }
+
+      // Add request logging
+      console.log("📤 Sending to Quinn AI:", {
+        resume_text: cvContent.substring(0, 100) + "...",
+        job_requirements: {
+          job_title: jobTitle,
+          required_skills: skillsArray,
+          experience_level: experienceLevel,
+          job_description: jobDescription ? jobDescription.substring(0, 50) + "..." : ""
+        }
+      })
+
+      const response = await fetch('/api/screen-resume', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`)
+      }
+
+      const result = await response.json()
+      
+      // Add response logging
+      console.log("📥 Quinn AI returned:", result)
+      
+      setResult(result)
+      if (result?.used_provider === 'fallback') {
+        setUsedProviderBadge('fallback')
+      } else if (result?.used_provider === 'primary') {
+        setUsedProviderBadge('primary')
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : 'Failed to connect to Quinn AI. Please check if the AI server is running and accessible.'
+      
+      setError(errorMessage)
+      console.error('❌ API Error:', err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleOcrExtract = async () => {
+    if (!ocrFile) {
+      setOcrError('Please select a file first')
+      return
+    }
+
+    setIsOcrLoading(true)
+    setOcrError(null)
+    setOcrResult('')
+
+    try {
+      // Convert file to base64
+      const reader = new FileReader()
+      
+      const base64Promise = new Promise<string>((resolve, reject) => {
+        reader.onload = () => {
+          const base64 = reader.result as string
+          // Remove the data URL prefix (e.g., "data:image/png;base64,")
+          const base64Data = base64.split(',')[1]
+          resolve(base64Data)
+        }
+        reader.onerror = reject
+      })
+
+      reader.readAsDataURL(ocrFile)
+      const imageBase64 = await base64Promise
+
+      console.log('📤 Sending OCR request...')
+
+      // Send to OCR API
+      const response = await fetch('/api/ocr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64 })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`)
+      }
+
+      const result = await response.json()
+      console.log('📥 OCR completed:', result)
+
+      setOcrResult(result.markdown_result || 'No text extracted')
+    } catch (err) {
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : 'Failed to extract text from resume. Please try again.'
+      
+      setOcrError(errorMessage)
+      console.error('❌ OCR Error:', err)
+    } finally {
+      setIsOcrLoading(false)
+    }
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setOcrFile(file)
+      setOcrError(null)
+      setOcrResult('')
+    }
+  }
+
+  const getScoreColor = (score: number) => {
+    if (score >= 70) return 'text-green-600'
+    if (score >= 50) return 'text-orange-600'
+    return 'text-red-600'
+  }
+
+  const getScoreBgColor = (score: number) => {
+    if (score >= 70) return 'bg-green-50 border-green-200'
+    if (score >= 50) return 'bg-orange-50 border-orange-200'
+    return 'bg-red-50 border-red-200'
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center">
+          <FlaskConical className="h-6 w-6 text-white" />
+        </div>
+        <div>
+          <h1 className="text-3xl font-bold">🧪 Quinn AI Testing</h1>
+          <p className="text-muted-foreground">
+            Test the Quinn AI screening API with real data
+          </p>
+        </div>
+      </div>
+
+      {/* Form Section */}
+      <Card className="shadow-lg">
+        <CardHeader>
+          <CardTitle>Job Requirements</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="jobTitle">
+                Job Title <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="jobTitle"
+                placeholder="e.g., Frontend Developer"
+                value={jobTitle}
+                onChange={(e) => setJobTitle(e.target.value)}
+                className="h-11"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="experienceLevel">
+                Experience Level <span className="text-red-500">*</span>
+              </Label>
+              <Select value={experienceLevel} onValueChange={setExperienceLevel}>
+                <SelectTrigger className="h-11">
+                  <SelectValue placeholder="Select experience level" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Entry">Entry (0-1 years)</SelectItem>
+                  <SelectItem value="Junior">Junior (1-3 years)</SelectItem>
+                  <SelectItem value="Mid">Mid (3-5 years)</SelectItem>
+                  <SelectItem value="Senior">Senior (5-8 years)</SelectItem>
+                  <SelectItem value="Lead">Lead (8+ years)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="requiredSkills">
+              Required Skills (comma-separated) <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              id="requiredSkills"
+              placeholder="e.g., next.js, css, wordpress"
+              value={requiredSkills}
+              onChange={(e) => setRequiredSkills(e.target.value)}
+              className="h-11"
+            />
+            <p className="text-xs text-muted-foreground">
+              Separate skills with commas (e.g., "next.js, css, wordpress")
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="jobDescription">
+              Job Description <span className="text-muted-foreground">(optional)</span>
+            </Label>
+            <Textarea
+              id="jobDescription"
+              placeholder="Paste the full job description here..."
+              value={jobDescription}
+              onChange={(e) => setJobDescription(e.target.value)}
+              rows={4}
+              className="resize-none"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* CV Content Section */}
+      <Card className="shadow-lg">
+        <CardHeader>
+          <CardTitle>Resume/CV Text</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <Label htmlFor="cvContent">
+            Resume/CV Text (paste here for testing) <span className="text-red-500">*</span>
+          </Label>
+          <Textarea
+            id="cvContent"
+            placeholder="Paste the candidate's resume text here..."
+            value={cvContent}
+            onChange={(e) => setCvContent(e.target.value)}
+            rows={15}
+            className="resize-none font-mono text-sm min-h-[250px]"
+          />
+          <p className="text-xs text-muted-foreground">
+            Paste the full text content of the candidate's resume
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Action Button */}
+      <Button
+        onClick={handleTest}
+        disabled={isLoading || !jobTitle.trim() || !requiredSkills.trim() || !experienceLevel || !cvContent.trim()}
+        className="w-full md:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 h-12 text-lg font-bold shadow-lg"
+      >
+        {isLoading ? (
+          <>
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+            Analyzing with primary AI...
+          </>
+        ) : (
+          <>
+            🚀 Test AI Screening
+          </>
+        )}
+      </Button>
+
+      {/* Error Display */}
+      {error && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      {/* Divider */}
+      <div className="relative py-8">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-gray-300"></div>
+        </div>
+        <div className="relative flex justify-center">
+          <span className="bg-background px-4 text-sm text-muted-foreground font-semibold">
+            OR TEST OTHER FEATURES
+          </span>
+        </div>
+      </div>
+
+      {/* Resume OCR Test Section */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-orange-500 to-red-500 flex items-center justify-center">
+            <FileText className="h-6 w-6 text-white" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold">📄 Resume OCR Test</h2>
+            <p className="text-muted-foreground">
+              Extract text from resume PDFs or images using Huawei OCR
+            </p>
+          </div>
+        </div>
+
+        <Card className="shadow-lg">
+          <CardHeader>
+            <CardTitle>Upload Resume</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="ocrFile">
+                Resume File (PDF or Image) <span className="text-red-500">*</span>
+              </Label>
+              <div className="flex items-center gap-4">
+                <Input
+                  id="ocrFile"
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  onChange={handleFileChange}
+                  className="h-11 cursor-pointer"
+                />
+                {ocrFile && (
+                  <Badge className="bg-blue-100 text-blue-800 border-blue-300">
+                    {ocrFile.name}
+                  </Badge>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Accepted formats: PDF, JPG, JPEG, PNG
+              </p>
+            </div>
+
+            <Button
+              onClick={handleOcrExtract}
+              disabled={isOcrLoading || !ocrFile}
+              className="w-full md:w-auto bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 h-12 text-lg font-bold shadow-lg"
+            >
+              {isOcrLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Extracting text from document...
+                </>
+              ) : (
+                <>
+                  <Upload className="mr-2 h-5 w-5" />
+                  Extract Resume Text
+                </>
+              )}
+            </Button>
+
+            {/* OCR Error Display */}
+            {ocrError && (
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>{ocrError}</AlertDescription>
+              </Alert>
+            )}
+
+            {/* OCR Results Display */}
+            {ocrResult && (
+              <div className="space-y-2 animate-in fade-in duration-500">
+                <Label>Extracted Text</Label>
+                <div className="border rounded-lg p-4 bg-gray-50 max-h-96 overflow-y-auto">
+                  <pre className="whitespace-pre-wrap text-sm font-mono text-gray-800">
+                    {ocrResult}
+                  </pre>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-green-600 font-medium">
+                  <CheckCircle className="h-4 w-4" />
+                  <span>Text extraction completed successfully!</span>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Results Display Section */}
+      {result && (
+        <div className="space-y-6 animate-in fade-in duration-500">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="h-6 w-6 text-blue-600" />
+            <h2 className="text-2xl font-bold">Quinn AI Screening Results</h2>
+            {usedProviderBadge === 'fallback' && (
+              <Badge variant="secondary" className="ml-2 text-gray-600">⚠️ Backup API used</Badge>
+            )}
+            {usedProviderBadge === 'primary' && (
+              <Badge variant="outline" className="ml-2 text-gray-500">Primary API</Badge>
+            )}
+          </div>
+
+          {/* Candidate Identity (if available) */}
+          {(result.candidate_name || result.candidate_email) && (
+            <Card className="shadow-sm">
+              <CardContent className="py-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <div className="text-sm text-muted-foreground">Candidate</div>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                    {result.candidate_name && (
+                      <div className="text-base font-semibold">{result.candidate_name}</div>
+                    )}
+                    {result.candidate_email && (
+                      <Badge variant="secondary" className="font-mono">{result.candidate_email}</Badge>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Score Card */}
+            <Card className={`shadow-lg border-2 ${getScoreBgColor(result.score)}`}>
+              <CardHeader>
+                <CardTitle className="text-lg">Match Score</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col items-center justify-center py-8">
+                <div className={`text-7xl font-bold ${getScoreColor(result.score)}`}>
+                  {result.score}
+                </div>
+                <div className="text-2xl font-semibold text-gray-600 mt-2">out of 100</div>
+              </CardContent>
+            </Card>
+
+            {/* Status Badge */}
+            <Card className="shadow-lg">
+              <CardHeader>
+                <CardTitle className="text-lg">Candidate Status</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col items-center justify-center py-8">
+                {result.is_good_fit ? (
+                  <>
+                    <CheckCircle className="h-20 w-20 text-green-600 mb-4" />
+                    <Badge className="text-2xl px-8 py-4 bg-green-100 text-green-800 border-2 border-green-300 font-bold">
+                      ✅ GOOD FIT
+                    </Badge>
+                  </>
+                ) : (
+                  <>
+                    <XCircle className="h-20 w-20 text-red-600 mb-4" />
+                    <Badge className="text-2xl px-8 py-4 bg-red-100 text-red-800 border-2 border-red-300 font-bold">
+                      ❌ NOT A FIT
+                    </Badge>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Skills Section */}
+          <Card className="shadow-lg">
+            <CardHeader>
+              <CardTitle>Skills Analysis</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  Skills Found
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {result.skills_found.length > 0 ? (
+                    result.skills_found.map((skill, index) => (
+                      <Badge key={index} className="bg-green-100 text-green-800 border-green-300 px-3 py-1 text-sm">
+                        {skill}
+                      </Badge>
+                    ))
+                  ) : (
+                    <p className="text-muted-foreground">No matching skills found</p>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                  <XCircle className="h-5 w-5 text-red-600" />
+                  Missing Skills
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {result.skills_missing.length > 0 ? (
+                    result.skills_missing.map((skill, index) => (
+                      <Badge key={index} className="bg-red-100 text-red-800 border-red-300 px-3 py-1 text-sm">
+                        {skill}
+                      </Badge>
+                    ))
+                  ) : (
+                    <p className="text-green-600 font-medium">All required skills found! ✓</p>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Experience Info */}
+          <Card className="shadow-lg">
+            <CardHeader>
+              <CardTitle>Experience Details</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-center p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border-2 border-blue-200">
+                <span className="font-semibold text-xl mr-3">Years of Experience:</span>
+                <span className="text-4xl font-bold text-blue-600">{result.years_of_experience}</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Reasoning Box */}
+          <Card className="shadow-lg">
+            <CardHeader>
+              <CardTitle>Quinn AI Reasoning</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg border border-gray-200">
+                <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">{result.reasoning}</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Performance */}
+          <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+            <Clock className="h-4 w-4" />
+            <span>Processing time: {result.processing_time_ms}ms</span>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+

@@ -3,22 +3,42 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Chrome, ArrowLeft, Loader2 } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Chrome, ArrowLeft, Loader2, Mail } from "lucide-react"
+import LoadingLogo from "@/components/LoadingLogo"
 import Link from "next/link"
 import Image from "next/image"
 import { useAuth } from "@/contexts/AuthContext"
-import { useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import Navbar from "@/components/Navbar"
 
 export default function LoginPage() {
-  const { user, signInWithGoogle, loading } = useAuth()
+  const { user, signInWithGoogle, signInWithEmail, signUpWithEmail, loading } = useAuth()
   const router = useRouter()
+  const [isSignUp, setIsSignUp] = useState(false)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [fullName, setFullName] = useState('')
+  const [emailLoading, setEmailLoading] = useState(false)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     if (user) {
       router.push('/dashboard')
     }
   }, [user, router])
+
+  // Enable signup mode by default when ?signup=1 or action=signup
+  const searchParams = useSearchParams()
+  useEffect(() => {
+    const signupParam = searchParams?.get('signup')
+    const action = searchParams?.get('action')
+    if (signupParam === '1' || action === 'signup') {
+      setIsSignUp(true)
+    }
+  }, [searchParams])
 
   const handleGoogleSignIn = async () => {
     try {
@@ -28,17 +48,51 @@ export default function LoginPage() {
     }
   }
 
+  const handleEmailAuth = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setEmailLoading(true)
+    setError('')
+
+    try {
+      if (isSignUp) {
+        // Validate full name for sign up
+        if (!fullName.trim()) {
+          setError('Please enter your full name')
+          setEmailLoading(false)
+          return
+        }
+        const { error } = await signUpWithEmail(email, password, fullName.trim())
+        if (error) {
+          setError(error.message)
+        } else {
+          setError('Check your email for a confirmation link!')
+        }
+      } else {
+        const { error } = await signInWithEmail(email, password)
+        if (error) {
+          setError(error.message)
+        }
+      }
+    } catch {
+      setError('An unexpected error occurred')
+    } finally {
+      setEmailLoading(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
+        <LoadingLogo size={48} />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      <Navbar />
+      <div className="flex items-center justify-center p-4 pt-24">
+        <div className="w-full max-w-md">
         {/* Back Button */}
         <div className="mb-6">
           <Link href="/">
@@ -53,20 +107,99 @@ export default function LoginPage() {
           <CardHeader className="text-center pb-6">
             <div className="flex justify-center mb-4">
               <Image 
-                src="/Recruit-Helper_Logo.webp" 
+                src="/@LOGO-black.png" 
                 alt="Recruit Assistant Logo" 
                 width={64} 
                 height={64}
                 className="w-16 h-16"
               />
             </div>
-            <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
+            <CardTitle className="text-2xl font-bold">
+              {isSignUp ? 'Create Account' : 'Welcome Back'}
+            </CardTitle>
             <CardDescription>
-              Sign in to your Recruit Assistant account
+              {isSignUp 
+                ? 'Sign up for your Recruit Assistant account'
+                : 'Sign in to your Recruit Assistant account'
+              }
             </CardDescription>
           </CardHeader>
 
           <CardContent className="space-y-6">
+            {/* Email/Password Form */}
+            <form onSubmit={handleEmailAuth} className="space-y-4">
+              {isSignUp && (
+                <div className="space-y-2">
+                  <Label htmlFor="fullName">Full Name</Label>
+                  <Input
+                    id="fullName"
+                    type="text"
+                    placeholder="Enter your full name"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    required
+                  />
+                </div>
+              )}
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                />
+              </div>
+              
+              {error && (
+                <Alert variant={error.includes('Check your email') ? 'default' : 'destructive'}>
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
+              <Button 
+                type="submit" 
+                className="w-full h-12"
+                disabled={emailLoading}
+              >
+                <Mail className="mr-2 h-5 w-5" />
+                {emailLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {isSignUp ? 'Creating Account...' : 'Signing in...'}
+                  </>
+                ) : (
+                  isSignUp ? 'Create Account' : 'Sign In'
+                )}
+              </Button>
+            </form>
+
+            {/* Divider */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Or continue with
+                </span>
+              </div>
+            </div>
+
             {/* Google OAuth Button */}
             <Button 
               variant="outline" 
@@ -85,12 +218,23 @@ export default function LoginPage() {
               )}
             </Button>
 
-            {/* Alert for information */}
-            <Alert>
-              <AlertDescription>
-                Sign in with your Google account to access the dashboard and manage your AI servers.
-              </AlertDescription>
-            </Alert>
+            {/* Toggle Sign Up/Sign In */}
+            <div className="text-center">
+              <Button 
+                variant="link" 
+                className="p-0 h-auto text-sm"
+                onClick={() => {
+                  setIsSignUp(!isSignUp)
+                  setError('')
+                  setFullName('')
+                }}
+              >
+                {isSignUp 
+                  ? 'Already have an account? Sign in' 
+                  : "Don't have an account? Sign up"
+                }
+              </Button>
+            </div>
 
             <div className="text-center">
               <p className="text-sm text-muted-foreground">
@@ -110,6 +254,7 @@ export default function LoginPage() {
             </div>
           </CardContent>
         </Card>
+        </div>
       </div>
     </div>
   )

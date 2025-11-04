@@ -1,0 +1,51 @@
+# Add the following environment variables to your .env.local
+
+# Primary ECS AI endpoint
+QWEN_API_ENDPOINT=http://YOUR_ECS_IP:8000/analyze
+
+# OpenRouter (used for both AI analysis and OCR fallback)
+# One API key works for both services!
+OPENROUTER_API_KEY=sk-or-...
+OPENROUTER_SITE_URL=http://localhost:3000
+OPENROUTER_TITLE=Resume Analyzer
+# Optional: choose a free model for AI analysis (default: deepseek/deepseek-r1:free)
+# OPENROUTER_MODEL=deepseek/deepseek-r1:free
+# Optional: choose a vision model for OCR (default: qwen/qwen2.5-vl-32b-instruct:free)
+# OPENROUTER_VISION_MODEL=qwen/qwen2.5-vl-32b-instruct:free
+
+# Copy this to .env.local in your project root
+# Replace the placeholder values with your actual credentials
+
+# ========================================
+# Supabase Configuration
+# ========================================
+# Get these from: Supabase Dashboard → Settings → API
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-public-key-here
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-secret-key-here
+
+# ========================================
+# Huawei Cloud OCR Configuration  
+# ========================================
+# Get these from: Huawei Cloud Console → My Credentials
+HUAWEI_ACCESS_KEY=your-huawei-access-key
+HUAWEI_SECRET_KEY=your-huawei-secret-key
+HUAWEI_PROJECT_ID=your-huawei-project-id
+HUAWEI_ENDPOINT=ocr.ap-southeast-1.myhuaweicloud.com
+
+# ========================================
+# Qwen API (Your ECS Endpoint)
+# ========================================
+# Your ECS server running the Qwen API
+# Leave empty for testing mode (will use mock responses)
+QWEN_API_ENDPOINT=http://your-ecs-ip:port/api/screen
+
+# ========================================
+# Site Configuration
+# ========================================
+# For local development
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+
+# For production (replace with your domain)
+# NEXT_PUBLIC_SITE_URL=https://yourdomain.com
+
