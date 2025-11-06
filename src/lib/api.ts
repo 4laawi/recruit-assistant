@@ -104,8 +104,23 @@ export async function getCandidates(
   return data.candidates;
 }
 
+interface UserProfile {
+  id: string
+  email: string
+  full_name?: string
+  subscription_tier: 'free' | 'pro' | 'enterprise'
+  total_screenings_count: number
+  total_resumes_processed: number
+  monthly_usage_count: number
+  usage_reset_date: string
+  max_monthly_screenings: number
+  max_resumes_per_screening: number
+  created_at: string
+  updated_at: string
+}
+
 export async function getUserStats(): Promise<{
-  profile: any;
+  profile: UserProfile | null;
   stats: {
     totalResumes: number;
     activeScreenings: number;
@@ -191,4 +206,3 @@ export async function getResumeFileUrl(
 export function createTempScreeningJobId(): string {
   return `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
-

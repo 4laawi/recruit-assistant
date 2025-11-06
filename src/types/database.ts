@@ -31,6 +31,7 @@ export interface Candidate {
   strengths?: string[];
   weaknesses?: string[];
   recommendation?: string;
+  summary?: string;
   candidate_name?: string;
   candidate_email?: string;
   candidate_phone?: string;
@@ -39,6 +40,8 @@ export interface Candidate {
   status: 'pending' | 'processing' | 'completed' | 'failed';
   error_message?: string;
   created_at: string;
+  updated_at?: string;
+  user_id?: string;
   processed_at?: string;
 }
 
@@ -93,4 +96,3 @@ export interface UploadResumeResponse {
   fileName: string;
   filePath: string;
 }
-

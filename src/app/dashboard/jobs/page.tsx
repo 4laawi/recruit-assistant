@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState, useEffect, useCallback } from 'react'
+import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -15,17 +15,13 @@ import {
   MapPin, 
   Clock, 
   Users, 
-  Eye,
   Edit2,
   Trash2,
   Search,
   Filter,
-  Loader2,
-  CheckCircle,
-  X
+  CheckCircle
 } from "lucide-react"
 import { useAuth } from '@/contexts/AuthContext'
-import { supabase } from '@/lib/supabaseClient'
 import { useToast } from "@/components/ui/use-toast"
 import LoadingLogo from "@/components/LoadingLogo"
 
@@ -55,23 +51,35 @@ export default function JobListingsPage() {
   const [filterStatus, setFilterStatus] = useState<string>('all')
   
   // Form state
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    title: string
+    description: string
+    location: string
+    work_location: 'remote' | 'on-site' | 'hybrid'
+    experience_level: string
+    required_skills: string
+    status: 'active' | 'closed' | 'draft'
+  }>({
     title: '',
     description: '',
     location: '',
-    work_location: 'remote' as const,
+    work_location: 'remote',
     experience_level: 'mid',
     required_skills: '',
-    status: 'active' as const
+    status: 'active'
   })
 
-  useEffect(() => {
+  const loadJobs = useCallback(() => {
     if (user) {
-      loadJobs()
+      loadJobsInternal()
     }
   }, [user])
 
-  const loadJobs = async () => {
+  useEffect(() => {
+    loadJobs()
+  }, [loadJobs])
+
+  const loadJobsInternal = useCallback(async () => {
     try {
       setIsLoading(true)
       
@@ -129,7 +137,7 @@ export default function JobListingsPage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [user, toast])
 
   const handleCreateJob = async () => {
     try {
@@ -497,7 +505,7 @@ export default function JobListingsPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="work_location">Work Type *</Label>
-                <Select value={formData.work_location} onValueChange={(value: any) => setFormData(prev => ({ ...prev, work_location: value }))}>
+                <Select value={formData.work_location} onValueChange={(value) => setFormData(prev => ({ ...prev, work_location: value as 'remote' | 'on-site' | 'hybrid' }))}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -539,7 +547,7 @@ export default function JobListingsPage() {
               
               <div>
                 <Label htmlFor="status">Status *</Label>
-                <Select value={formData.status} onValueChange={(value: any) => setFormData(prev => ({ ...prev, status: value }))}>
+                <Select value={formData.status} onValueChange={(value) => setFormData(prev => ({ ...prev, status: value as 'active' | 'closed' | 'draft' }))}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -587,4 +595,3 @@ export default function JobListingsPage() {
     </div>
   )
 }
-

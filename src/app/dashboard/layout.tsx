@@ -13,6 +13,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext"
 import { useRouter, usePathname } from "next/navigation"
 import { useEffect } from "react"
+import type { User } from "@supabase/supabase-js"
 
 export default function DashboardLayout({
   children,
@@ -29,16 +30,7 @@ export default function DashboardLayout({
     }
   }, [user, loading, router])
 
-  const handleSignOut = async () => {
-    try {
-      await signOut()
-      router.push('/')
-    } catch (error) {
-      console.error('Sign out error:', error)
-    }
-  }
-
-  const getUserInitials = (user: any) => {
+  const getUserInitials = (user: User) => {
     const fullName = user?.user_metadata?.full_name
     if (fullName) {
       const names = fullName.split(' ')
@@ -50,7 +42,7 @@ export default function DashboardLayout({
     return user?.email?.split('@')[0].substring(0, 2).toUpperCase() || 'U'
   }
 
-  const getUserDisplayName = (user: any) => {
+  const getUserDisplayName = (user: User) => {
     const fullName = user?.user_metadata?.full_name
     if (fullName) {
       return fullName
@@ -60,7 +52,7 @@ export default function DashboardLayout({
     return name.charAt(0).toUpperCase() + name.slice(1)
   }
 
-  const getUserAvatar = (user: any) => {
+  const getUserAvatar = (user: User) => {
     // Try to get Google profile picture
     if (user?.user_metadata?.avatar_url) {
       return user.user_metadata.avatar_url

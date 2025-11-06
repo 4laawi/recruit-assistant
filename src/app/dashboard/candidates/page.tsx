@@ -18,7 +18,6 @@ import {
   Briefcase,
   Download,
   ExternalLink,
-  Loader2,
   TrendingUp,
   CheckCircle,
   XCircle,
@@ -65,6 +64,7 @@ export default function CandidatesPage() {
           weaknesses: ['Limited experience with mobile development'],
           summary: 'Senior software engineer with 8 years of experience...',
           status: 'completed',
+          ocr_status: 'completed' as const,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           user_id: user?.id || ''
@@ -87,6 +87,7 @@ export default function CandidatesPage() {
           weaknesses: ['Limited frontend experience'],
           summary: 'Full-stack developer with focus on backend...',
           status: 'completed',
+          ocr_status: 'completed' as const,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           user_id: user?.id || ''
@@ -109,6 +110,7 @@ export default function CandidatesPage() {
           weaknesses: [],
           summary: 'DevOps engineer with extensive cloud experience...',
           status: 'completed',
+          ocr_status: 'completed' as const,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           user_id: user?.id || ''
@@ -144,9 +146,9 @@ export default function CandidatesPage() {
     
     const matchesScore = 
       filterScore === 'all' ||
-      (filterScore === 'excellent' && (candidate.match_score || 0) >= 90) ||
-      (filterScore === 'good' && (candidate.match_score || 0) >= 75 && (candidate.match_score || 0) < 90) ||
-      (filterScore === 'fair' && (candidate.match_score || 0) < 75)
+      (filterScore === 'excellent' && (candidate.match_score ?? 0) >= 90) ||
+      (filterScore === 'good' && (candidate.match_score ?? 0) >= 75 && (candidate.match_score ?? 0) < 90) ||
+      (filterScore === 'fair' && (candidate.match_score ?? 0) < 75)
     
     return matchesSearch && matchesStatus && matchesScore
   })
@@ -246,7 +248,7 @@ export default function CandidatesPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold">
-                  {candidates.filter(c => (c.match_score || 0) >= 90).length}
+                  {candidates.filter(c => (c.match_score ?? 0) >= 90).length}
                 </p>
                 <p className="text-sm text-gray-600">Excellent Match</p>
               </div>
@@ -263,7 +265,7 @@ export default function CandidatesPage() {
               <div>
                 <p className="text-2xl font-bold">
                   {candidates.length > 0 
-                    ? Math.round(candidates.reduce((sum, c) => sum + (c.match_score || 0), 0) / candidates.length)
+                    ? Math.round(candidates.reduce((sum, c) => sum + (c.match_score ?? 0), 0) / candidates.length)
                     : 0}%
                 </p>
                 <p className="text-sm text-gray-600">Avg Match Score</p>
@@ -324,10 +326,10 @@ export default function CandidatesPage() {
                         )}
                       </div>
                     </div>
-                    {candidate.match_score !== null && getScoreBadge(candidate.match_score)}
+                    {candidate.match_score !== null && candidate.match_score !== undefined && getScoreBadge(candidate.match_score)}
                   </div>
                   
-                  {candidate.match_score !== null && (
+                  {candidate.match_score !== null && candidate.match_score !== undefined && (
                     <div className="mb-3">
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-sm font-medium">Match Score</span>
@@ -426,7 +428,7 @@ export default function CandidatesPage() {
                 </div>
                 
                 {/* Match Score */}
-                {selectedCandidate.match_score !== null && (
+                {selectedCandidate.match_score !== null && selectedCandidate.match_score !== undefined && (
                   <div>
                     <h3 className="font-semibold mb-2">Match Score</h3>
                     <div className="flex items-center gap-4">
@@ -514,4 +516,3 @@ export default function CandidatesPage() {
     </div>
   )
 }
-

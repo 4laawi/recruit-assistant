@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Progress } from "@/components/ui/progress"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { 
@@ -27,10 +26,8 @@ import {
   TrendingUp, 
   Clock, 
   Users, 
-  Download, 
   Eye,
   Plus,
-  Star,
   MapPin,
   X,
   CheckCircle,
@@ -48,15 +45,42 @@ import { ScreeningJob, Candidate } from '@/types/database'
 import { startScreening, getScreeningJobs, getCandidates, getUserStats, uploadResume, deleteScreeningJob, getResumeFileUrl } from '@/lib/api'
 import { useToast } from "@/components/ui/use-toast"
 import LoadingLogo from "@/components/LoadingLogo"
+import type { User } from "@supabase/supabase-js"
 
 // New Screening Form Component - Moved outside to prevent re-creation on every render
+interface UserProfile {
+  id: string
+  email: string
+  full_name?: string
+  subscription_tier: 'free' | 'pro' | 'enterprise'
+  total_screenings_count: number
+  total_resumes_processed: number
+  monthly_usage_count: number
+  usage_reset_date: string
+  max_monthly_screenings: number
+  max_resumes_per_screening: number
+  created_at: string
+  updated_at: string
+}
+
+interface UserStats {
+  profile: UserProfile | null
+  stats: {
+    totalResumes: number
+    activeScreenings: number
+    avgProcessingTime: string
+    monthlyUsage: number
+    monthlyLimit: number
+  }
+}
+
 function NewScreeningForm({ 
   user,
   userStats,
   onComplete 
 }: { 
-  user: any
-  userStats: any
+  user: User | null
+  userStats: UserStats | null
   onComplete: () => void 
 }) {
   const { toast } = useToast()
@@ -184,57 +208,58 @@ function NewScreeningForm({
           const result = await uploadResume(file, tempJobId)
           fileIds.push(result.fileId)
           setUploadProgress(((i + 1) / uploadedFiles.length) * 100)
-        } catch (error) {
-          console.error(`Failed to upload ${file.name}:`, error)
-          toast({
-            title: "Upload Error",
-            description: `Failed to upload ${file.name}`,
-            variant: "destructive",
-          })
-        }
-      }
-      setIsUploading(false)
-
-      if (fileIds.length === 0) {
-        throw new Error("No files were uploaded successfully")
-      }
-
-      // Start the screening process
-      const result = await startScreening({
-        jobTitle,
-        requiredSkills: skillsTags,
-        yearsExperience,
-        workLocation,
-        location: location || undefined,
-        jobDescription: jobDescription || undefined,
-        fileIds,
-      })
-
+    } catch (error) {
+      console.error(`Failed to upload ${file.name}:`, error)
       toast({
-        title: "🎉 Screening Started!",
-        description: `Processing ${uploadedFiles.length} resumes. Estimated time: ${result.estimatedTime}`,
+        title: "Upload Error",
+        description: `Failed to upload ${file.name}`,
+        variant: "destructive",
       })
+    }
+  }
+  setIsUploading(false)
 
-      // Reset form
-      setJobTitle('')
-      setRequiredSkills('')
-      setSkillsTags([])
-      setWorkLocation('')
-      setLocation('')
-      setYearsExperience('')
-      setJobDescription('')
-      setUploadedFiles([])
-      setUploadedFileIds([])
-      setUploadProgress(0)
-      
-      // Call the completion handler
-      onComplete()
+  if (fileIds.length === 0) {
+    throw new Error("No files were uploaded successfully")
+  }
 
-    } catch (error: any) {
+  // Start the screening process
+  const result = await startScreening({
+    jobTitle,
+    requiredSkills: skillsTags,
+    yearsExperience,
+    workLocation,
+    location: location || undefined,
+    jobDescription: jobDescription || undefined,
+    fileIds,
+  })
+
+  toast({
+    title: "🎉 Screening Started!",
+    description: `Processing ${uploadedFiles.length} resumes. Estimated time: ${result.estimatedTime}`,
+  })
+
+  // Reset form
+  setJobTitle('')
+  setRequiredSkills('')
+  setSkillsTags([])
+  setWorkLocation('')
+  setLocation('')
+  setYearsExperience('')
+  setJobDescription('')
+  setUploadedFiles([])
+  setUploadedFileIds([])
+  setUploadProgress(0)
+  
+  // Call the completion handler
+  onComplete()
+
+    } catch (error: unknown) {
       console.error('Error starting screening:', error)
+      const errorMessage = error instanceof Error ? error.message : "Failed to start screening"
       toast({
         title: "Error",
-        description: error.message || "Failed to start screening",
+        description: errorMessage,
         variant: "destructive",
       })
     } finally {
@@ -661,7 +686,7 @@ export default function DashboardPage() {
   // Data state
   const [screeningJobs, setScreeningJobs] = useState<ScreeningJob[]>([])
   const [isLoadingJobs, setIsLoadingJobs] = useState(true)
-  const [userStats, setUserStats] = useState<any>(null)
+  const [userStats, setUserStats] = useState<UserStats | null>(null)
   
   // View state
   const [showNewScreeningForm, setShowNewScreeningForm] = useState(false)
@@ -756,7 +781,7 @@ export default function DashboardPage() {
     }
   }
 
-  const loadCandidatesForJob = async (jobId: string) => {
+  const loadCandidatesForJob = useCallback(async (jobId: string) => {
     try {
       setIsLoadingCandidates(true)
       const candidates = await getCandidates(jobId)
@@ -771,111 +796,13 @@ export default function DashboardPage() {
     } finally {
       setIsLoadingCandidates(false)
     }
-  }
+  }, [toast])
 
   const handleScreeningComplete = async () => {
     setShowNewScreeningForm(false)
     await loadScreeningJobs(true) // Force refresh after completing a screening
     await loadUserStats()
   }
-
-  const viewResults = (jobId: string) => {
-    setSelectedJobForResults(jobId)
-    loadCandidatesForJob(jobId)
-  }
-
-  const handleDeleteScreening = async (jobId: string) => {
-    try {
-      setIsDeletingJob(true)
-      await deleteScreeningJob(jobId)
-      
-      toast({
-        title: "✓ Deleted",
-        description: "Screening job and all associated files have been deleted.",
-      })
-      
-      // Refresh the list (force refresh after delete)
-      await loadScreeningJobs(true)
-      await loadUserStats()
-      
-      setJobToDelete(null)
-    } catch (error: any) {
-      console.error('Error deleting screening job:', error)
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete screening job",
-        variant: "destructive",
-      })
-    } finally {
-      setIsDeletingJob(false)
-    }
-  }
-
-  const handleViewResume = async (candidateId: string) => {
-    try {
-      setDownloadingResumeId(candidateId)
-      const { signedUrl, filename } = await getResumeFileUrl(candidateId)
-      
-      // Open in new tab
-      window.open(signedUrl, '_blank')
-      
-      toast({
-        title: "✓ Resume Opened",
-        description: `Opening ${filename} in a new tab`,
-      })
-    } catch (error: any) {
-      console.error('Error viewing resume:', error)
-      toast({
-        title: "Error",
-        description: error.message || "Failed to load resume",
-        variant: "destructive",
-      })
-    } finally {
-      setDownloadingResumeId(null)
-    }
-  }
-
-  const handleDownloadResume = async (candidateId: string, candidateName?: string) => {
-    try {
-      setDownloadingResumeId(candidateId)
-      const { signedUrl, filename } = await getResumeFileUrl(candidateId)
-      
-      // Download the file
-      const response = await fetch(signedUrl)
-      const blob = await response.blob()
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = candidateName ? `${candidateName.replace(/\s+/g, '_')}_resume.pdf` : filename
-      document.body.appendChild(a)
-      a.click()
-      window.URL.revokeObjectURL(url)
-      document.body.removeChild(a)
-      
-      toast({
-        title: "✓ Downloaded",
-        description: `${filename} has been downloaded`,
-      })
-    } catch (error: any) {
-      console.error('Error downloading resume:', error)
-      toast({
-        title: "Error",
-        description: error.message || "Failed to download resume",
-        variant: "destructive",
-      })
-    } finally {
-      setDownloadingResumeId(null)
-    }
-  }
-
-  // Load user data on mount (only once)
-  useEffect(() => {
-    if (user && !hasInitiallyLoaded.current) {
-      hasInitiallyLoaded.current = true
-      loadScreeningJobs()
-      loadUserStats()
-    }
-  }, [user, loadScreeningJobs])
 
   // Setup real-time subscriptions for live updates
   useEffect(() => {
@@ -904,7 +831,7 @@ export default function DashboardPage() {
       })
 
     // Subscribe to candidates updates if viewing results
-    let candidatesChannel: any = null
+    let candidatesChannel: ReturnType<typeof supabase.channel> | null = null
     if (selectedJobForResults) {
       candidatesChannel = supabase
         .channel('candidates_changes')
@@ -928,7 +855,7 @@ export default function DashboardPage() {
       jobsChannel.unsubscribe()
       if (candidatesChannel) candidatesChannel.unsubscribe()
     }
-  }, [user, selectedJobForResults, loadScreeningJobs])
+  }, [user, selectedJobForResults, loadScreeningJobs, loadCandidatesForJob])
 
   // Polling for active jobs (fallback in case real-time fails)
   useEffect(() => {
@@ -955,6 +882,107 @@ export default function DashboardPage() {
       clearInterval(pollInterval)
     }
   }, [user, screeningJobs, loadScreeningJobs])
+
+  // Load user data on mount (only once)
+  useEffect(() => {
+    if (user && !hasInitiallyLoaded.current) {
+      hasInitiallyLoaded.current = true
+      loadScreeningJobs()
+      loadUserStats()
+    }
+  }, [user, loadScreeningJobs])
+
+  const viewResults = useCallback((jobId: string) => {
+    setSelectedJobForResults(jobId)
+    loadCandidatesForJob(jobId)
+  }, [loadCandidatesForJob])
+
+  const handleDeleteScreening = useCallback(async (jobId: string) => {
+    try {
+      setIsDeletingJob(true)
+      await deleteScreeningJob(jobId)
+      
+      toast({
+        title: "✓ Deleted",
+        description: "Screening job and all associated files have been deleted.",
+      })
+      
+      // Refresh the list (force refresh after delete)
+      await loadScreeningJobs(true)
+      await loadUserStats()
+      
+      setJobToDelete(null)
+    } catch (error: unknown) {
+      console.error('Error deleting screening job:', error)
+      const errorMessage = error instanceof Error ? error.message : "Failed to delete screening job"
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      })
+    } finally {
+      setIsDeletingJob(false)
+    }
+  }, [loadScreeningJobs, toast])
+
+  const handleViewResume = useCallback(async (candidateId: string) => {
+    try {
+      setDownloadingResumeId(candidateId)
+      const { signedUrl, filename } = await getResumeFileUrl(candidateId)
+      
+      // Open in new tab
+      window.open(signedUrl, '_blank')
+      
+      toast({
+        title: "✓ Resume Opened",
+        description: `Opening ${filename} in a new tab`,
+      })
+    } catch (error: unknown) {
+      console.error('Error viewing resume:', error)
+      const errorMessage = error instanceof Error ? error.message : "Failed to load resume"
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      })
+    } finally {
+      setDownloadingResumeId(null)
+    }
+  }, [toast])
+
+  const handleDownloadResume = useCallback(async (candidateId: string, candidateName?: string) => {
+    try {
+      setDownloadingResumeId(candidateId)
+      const { signedUrl, filename } = await getResumeFileUrl(candidateId)
+      
+      // Download the file
+      const response = await fetch(signedUrl)
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = candidateName ? `${candidateName.replace(/\s+/g, '_')}_resume.pdf` : filename
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+      
+      toast({
+        title: "✓ Downloaded",
+        description: `${filename} has been downloaded`,
+      })
+    } catch (error: unknown) {
+      console.error('Error downloading resume:', error)
+      const errorMessage = error instanceof Error ? error.message : "Failed to download resume"
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      })
+    } finally {
+      setDownloadingResumeId(null)
+    }
+  }, [toast])
 
   // Loading state - only show full-screen loading on initial load
   if (isLoadingJobs && screeningJobs.length === 0) {
