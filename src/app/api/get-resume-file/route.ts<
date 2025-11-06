@@ -47,52 +47,72 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get query parameters
-    const searchParams = req.nextUrl.searchParams;
-    const screeningJobId = searchParams.get("screeningJobId");
+    // Get candidate ID from query params
+    const { searchParams } = new URL(req.url);
+    const candidateId = searchParams.get("candidateId");
 
-    if (!screeningJobId) {
+    if (!candidateId) {
       return NextResponse.json(
-        { error: "Missing screening job ID" },
+        { error: "Missing candidate ID" },
         { status: 400 }
       );
     }
 
-    // Verify user owns this screening job
-    const { data: job, error: jobError } = await supabaseAdmin
-      .from("screening_jobs")
-      .select("user_id")
-      .eq("id", screeningJobId)
+    // Get candidate record
+    const { data: candidate, error: candidateError } = await supabaseAdmin
+      .from("candidates")
+      .select("screening_job_id, file_path, filename")
+      .eq("id", candidateId)
       .single();
 
-    if (jobError || !job || job.user_id !== user.id) {
+    if (candidateError || !candidate) {
       return NextResponse.json(
-        { error: "Screening job not found or unauthorized" },
+        { error: "Candidate not found" },
         { status: 404 }
       );
     }
 
-    // Get candidates, ordered by match score (highest first)
-    const { data: candidates, error: candidatesError } = await supabaseAdmin
-      .from("candidates")
-      .select("*")
-      .eq("screening_job_id", screeningJobId)
-      .order("match_score", { ascending: false, nullsFirst: false });
+    // Verify user owns the screening job
+    const { data: job, error: jobError } = await supabaseAdmin
+      .from("screening_jobs")
+      .select("user_id")
+      .eq("id", candidate.screening_job_id)
+      .single();
 
-    if (candidatesError) {
-      console.error("Error fetching candidates:", candidatesError);
+    if (jobError || !job || job.user_id !== user.id) {
       return NextResponse.json(
-        { error: "Failed to fetch candidates" },
+        { error: "Unauthorized - you don't own this candidate's screening job" },
+        { status: 403 }
+      );
+    }
+
+    if (!candidate.file_path) {
+      return NextResponse.json(
+        { error: "File path not found for this candidate" },
+        { status: 404 }
+      );
+    }
+
+    // Generate signed URL (valid for 1 hour)
+    const { data: signedUrlData, error: urlError } = await supabaseAdmin.storage
+      .from("resumes")
+      .createSignedUrl(candidate.file_path, 3600); // 1 hour
+
+    if (urlError || !signedUrlData) {
+      console.error("Error creating signed URL:", urlError);
+      return NextResponse.json(
+        { error: "Failed to generate download URL" },
         { status: 500 }
       );
     }
 
     return NextResponse.json({
       success: true,
-      candidates: candidates || [],
+      signedUrl: signedUrlData.signedUrl,
+      filename: candidate.filename,
     });
   } catch (error) {
-    console.error("Get candidates error:", error);
+    console.error("Get resume file error:", error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 }
