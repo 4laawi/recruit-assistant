@@ -77,7 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error }
     } catch (error) {
       console.error('Error signing in with email:', error)
-      return { error }
+      return { error: error as AuthError }
     }
   }
 
@@ -96,7 +96,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error }
     } catch (error) {
       console.error('Error signing up with email:', error)
-      return { error }
+      return { error: error as AuthError }
     }
   }
 
@@ -108,7 +108,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error }
     } catch (error) {
       console.error('Error resetting password:', error)
-      return { error }
+      return { error: error as AuthError }
     }
   }
 

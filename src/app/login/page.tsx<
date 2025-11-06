@@ -10,11 +10,11 @@ import LoadingLogo from "@/components/LoadingLogo"
 import Link from "next/link"
 import Image from "next/image"
 import { useAuth } from "@/contexts/AuthContext"
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useEffect, useState, Suspense } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import Navbar from "@/components/Navbar"
 
-export default function LoginPage() {
+function LoginForm() {
   const { user, signInWithGoogle, signInWithEmail, signUpWithEmail, loading } = useAuth()
   const router = useRouter()
   const [isSignUp, setIsSignUp] = useState(false)
@@ -247,5 +247,36 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+function SearchParamsHandler({ children }: { children: React.ReactNode }) {
+  const searchParams = useSearchParams()
+  const signupParam = searchParams?.get('signup')
+  const action = searchParams?.get('action')
+  
+  // Store the signup state in sessionStorage to persist across renders
+  useEffect(() => {
+    if (signupParam === '1' || action === 'signup') {
+      sessionStorage.setItem('login-is-signup', 'true')
+    } else {
+      sessionStorage.removeItem('login-is-signup')
+    }
+  }, [signupParam, action])
+  
+  return <>{children}</>
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingLogo size={48} />
+      </div>
+    }>
+      <SearchParamsHandler>
+        <LoginForm />
+      </SearchParamsHandler>
+    </Suspense>
   )
 }

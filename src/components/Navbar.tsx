@@ -45,7 +45,7 @@ export default function Navbar() {
     hover: { 
       scale: 1.05,
       boxShadow: "0 20px 25px -5px rgba(147, 51, 234, 0.3), 0 10px 10px -5px rgba(59, 130, 246, 0.2)",
-      transition: { duration: 0.3, ease: "easeOut" }
+      transition: { duration: 0.3 }
     },
     tap: { scale: 0.95 }
   }
@@ -57,7 +57,7 @@ export default function Navbar() {
         hidden: { y: "-100%" }
       }}
       animate={hidden ? "hidden" : "visible"}
-      transition={{ duration: 0.3, ease: "easeInOut" }}
+      transition={{ duration: 0.3 }}
       className="fixed top-0 w-full z-50 py-4"
     >
       <div className="container mx-auto px-8 lg:px-16 xl:px-24">

@@ -1,46 +1,32 @@
-# TODO: Fix Vercel Deployment Errors
+# Vercel Deployment Fix Plan
 
-## Task Progress
+## Issues Identified:
 
-- [x] Analyze build errors from Vercel log
-- [ ] Fix TypeScript errors (no-explicit-any) in settings page
-- [ ] Fix React Hooks/exhaustive-deps warnings
-- [ ] Remove unused variable warnings across all files
-- [ ] Test locally to ensure fixes work
-- [ ] Verify production build succeeds
+1. **Type Error in Navbar.tsx**: Framer-motion variants type incompatibility with ease property - FIXED
+2. **Unused Variables**: Multiple ESLint warnings across various files
+3. **React Hooks Warning**: Ref value change in useEffect cleanup
 
-## Main Issues to Fix
+## Steps to Fix:
 
-### 1. Critical TypeScript Errors (Settings Page)
+- [x] Fix framer-motion type error in Navbar.tsx
+- [ ] Remove unused imports and variables in src/app/dashboard/layout.tsx (signOut)
+- [ ] Remove unused imports and variables in src/app/dashboard/page.tsx (user, uploadedFileIds, topCandidate)
+- [ ] Remove unused imports and variables in src/app/dashboard/reports/page.tsx (Loader2, AlertCircle, setStats)
+- [ ] Remove unused imports and variables in src/app/dashboard/settings/page.tsx (Textarea, SettingsIcon, Phone, Building, error)
+- [ ] Remove unused imports and variables in src/app/page.tsx (useTransform, AnimatePresence, progress, scrollY, isMockupVisible, scrollYProgress, scaleIn)
+- [ ] Remove unused imports and variables in src/app/pricing/page.tsx (Separator, Users, Zap, Shield, Clock, Star, TrendingUp, Brain, Target, Phone, priceCounters)
+- [ ] Remove unused imports and variables in src/lib/services/fallbacks.ts (NextResponse)
+- [ ] Fix React hooks exhaustive deps warning in src/app/page.tsx
+- [ ] Test build to ensure deployment readiness
+- [ ] Verify all changes maintain functionality
 
-- Line 90: Error: Unexpected any. Specify a different type. @typescript-eslint/no-explicit-any
-- Line 170: Error: Unexpected any. Specify a different type. @typescript-eslint/no-explicit-any
+## Files to Update:
 
-### 2. React Hooks/exhaustive-deps Warnings
-
-- jobs/page.tsx:76:6 - missing dependency: 'loadJobsInternal'
-- jobs/page.tsx:140:6 - unnecessary dependency: 'user'
-- reports/page.tsx:95:6 - missing dependency: 'loadReports'
-
-### 3. Unused Variables
-
-- settings/page.tsx: Multiple unused imports (Textarea, SettingsIcon, Phone, Building, preferences, setPreferences)
-- Various pages: Unused variables and imports
-
-## Files to Fix
-
-1. src/app/dashboard/settings/page.tsx
-2. src/app/dashboard/jobs/page.tsx
-3. src/app/dashboard/reports/page.tsx
-4. src/app/dashboard/layout.tsx
-5. src/app/dashboard/page.tsx
-6. src/app/page.tsx
-7. src/app/pricing/page.tsx
-8. src/lib/services/fallbacks.ts
-
-## Strategy
-
-1. Fix TypeScript errors first (critical for deployment)
-2. Address React Hooks warnings (affects performance)
-3. Clean up unused variables (improves code quality)
-4. Test build locally before re-deploying
+- [x] src/components/Navbar.tsx (main type error) - COMPLETED
+- [ ] src/app/dashboard/layout.tsx
+- [ ] src/app/dashboard/page.tsx
+- [ ] src/app/dashboard/reports/page.tsx
+- [ ] src/app/dashboard/settings/page.tsx
+- [ ] src/app/page.tsx
+- [ ] src/app/pricing/page.tsx
+- [ ] src/lib/services/fallbacks.ts
