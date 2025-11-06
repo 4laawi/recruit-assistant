@@ -1,32 +1,25 @@
-# Vercel Deployment Fix Plan
+# TODO: Fix Supabase Build Error
 
-## Issues Identified:
+## Problem
 
-1. **Type Error in Navbar.tsx**: Framer-motion variants type incompatibility with ease property - FIXED
-2. **Unused Variables**: Multiple ESLint warnings across various files
-3. **React Hooks Warning**: Ref value change in useEffect cleanup
+Build error: "supabaseUrl is required" in delete-screening-job route
 
-## Steps to Fix:
+## Steps
 
-- [x] Fix framer-motion type error in Navbar.tsx
-- [ ] Remove unused imports and variables in src/app/dashboard/layout.tsx (signOut)
-- [ ] Remove unused imports and variables in src/app/dashboard/page.tsx (user, uploadedFileIds, topCandidate)
-- [ ] Remove unused imports and variables in src/app/dashboard/reports/page.tsx (Loader2, AlertCircle, setStats)
-- [ ] Remove unused imports and variables in src/app/dashboard/settings/page.tsx (Textarea, SettingsIcon, Phone, Building, error)
-- [ ] Remove unused imports and variables in src/app/page.tsx (useTransform, AnimatePresence, progress, scrollY, isMockupVisible, scrollYProgress, scaleIn)
-- [ ] Remove unused imports and variables in src/app/pricing/page.tsx (Separator, Users, Zap, Shield, Clock, Star, TrendingUp, Brain, Target, Phone, priceCounters)
-- [ ] Remove unused imports and variables in src/lib/services/fallbacks.ts (NextResponse)
-- [ ] Fix React hooks exhaustive deps warning in src/app/page.tsx
-- [ ] Test build to ensure deployment readiness
-- [ ] Verify all changes maintain functionality
+- [x] Examine Supabase client configuration
+- [x] Check environment variable setup
+- [x] Review delete-screening-job API route
+- [ ] Fix Supabase client initialization
+- [ ] Ensure environment variables are properly loaded
+- [ ] Test the fix with build process
+- [ ] Verify all API routes work correctly
 
-## Files to Update:
+## Error Details
 
-- [x] src/components/Navbar.tsx (main type error) - COMPLETED
-- [ ] src/app/dashboard/layout.tsx
-- [ ] src/app/dashboard/page.tsx
-- [ ] src/app/dashboard/reports/page.tsx
-- [ ] src/app/dashboard/settings/page.tsx
-- [ ] src/app/page.tsx
-- [ ] src/app/pricing/page.tsx
-- [ ] src/lib/services/fallbacks.ts
+```
+Error: supabaseUrl is required.
+    at <unknown> (.next/server/chunks/672.js:34:39411)
+    at new bS (.next/server/chunks/672.js:34:39662)
+    at bT (.next/server/chunks/672.js:34:44599)
+    at 17099 (.next/server/app/api/delete-screening-job/route.js:1:806)
+```

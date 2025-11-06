@@ -29,9 +29,26 @@ interface CandidateStatus {
   status: string;
 }
 
+// Validate required environment variables
+function getSupabaseUrl(): string {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!url) {
+    throw new Error('NEXT_PUBLIC_SUPABASE_URL is required. Please check your environment variables.');
+  }
+  return url;
+}
+
+function getSupabaseServiceRoleKey(): string {
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!key) {
+    throw new Error('SUPABASE_SERVICE_ROLE_KEY is required. Please check your environment variables.');
+  }
+  return key;
+}
+
 const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  getSupabaseUrl(),
+  getSupabaseServiceRoleKey(),
   {
     auth: {
       autoRefreshToken: false,
