@@ -364,7 +364,7 @@ export default function Home() {
       </motion.section>
 
       {/* Features Section - Bento Grid */}
-      <section className="container mx-auto px-8 lg:px-16 xl:px-24 py-24 relative z-10">
+      <section id="features" className="container mx-auto px-8 lg:px-16 xl:px-24 py-24 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}

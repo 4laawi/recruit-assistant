@@ -11,7 +11,7 @@ type LoadingLogoProps = {
 export default function LoadingLogo({ size = 48, className = "" }: LoadingLogoProps) {
   return (
     <Image
-      src="/@LOGO-black.png"
+      src="/LOGO-black.png"
       alt="Loading"
       width={size}
       height={size}
@@ -20,9 +20,3 @@ export default function LoadingLogo({ size = 48, className = "" }: LoadingLogoPr
     />
   )
 }
-
-
-
-
-
-

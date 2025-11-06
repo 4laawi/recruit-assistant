@@ -82,7 +82,7 @@ export default function Navbar() {
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-8">
             {[
-              { href: "#features", label: "Features" },
+              { href: "/#features", label: "Features" },
               { href: "/pricing", label: "Pricing" },
               { href: "#documentation", label: "Docs" },
               { href: "#about", label: "About" }
@@ -189,7 +189,7 @@ export default function Navbar() {
               <SheetContent side="right" className="w-80 bg-white/95 backdrop-blur-xl">
                 <div className="flex flex-col space-y-6 mt-8">
                   {[
-                    { href: "#features", label: "Features" },
+                    { href: "/#features", label: "Features" },
                     { href: "/pricing", label: "Pricing" },
                     { href: "#documentation", label: "Documentation" },
                     { href: "#about", label: "About" }

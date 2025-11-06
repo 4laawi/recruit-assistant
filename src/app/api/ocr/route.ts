@@ -258,56 +258,14 @@ export async function POST(req: NextRequest) {
         { headers: { 'x-api-used': 'primary' } }
       );
     } else {
-      console.warn("⚠️ Primary OCR failed, switching to OCR.space fallback");
+      console.warn("⚠️ Huawei OCR failed");
+      throw new Error(`Huawei OCR failed with status ${response.status}`);
     }
-
-    // === FALLBACK: OCR.space ===
-    const OCR_SPACE_API_KEY = process.env.OCR_SPACE_API_KEY;
-    if (!OCR_SPACE_API_KEY) {
-      throw new Error("Both services unavailable. Please try again later.");
-    }
-
-    const fileBuffer = Buffer.from(body.image, 'base64');
-    const form = new FormData();
-    form.append("apikey", OCR_SPACE_API_KEY);
-    form.append("language", "eng");
-    form.append("isOverlayRequired", "false");
-    form.append("detectOrientation", "true");
-    form.append("file", new Blob([fileBuffer]), "document.pdf");
-
-    const fallbackController = new AbortController();
-    const fallbackTimeout = setTimeout(() => fallbackController.abort(), 30000);
-    const fallbackRes = await fetch("https://api.ocr.space/parse/image", {
-      method: "POST",
-      body: form,
-      signal: fallbackController.signal,
-    });
-    clearTimeout(fallbackTimeout);
-
-    if (!fallbackRes.ok) {
-      const txt = await fallbackRes.text().catch(() => "");
-      throw new Error(txt || "Both services unavailable. Please try again later.");
-    }
-    const fallbackJson = await fallbackRes.json();
-    if (fallbackJson?.IsErroredOnProcessing) {
-      throw new Error("OCR.space error");
-    }
-    const parsedText: string = fallbackJson?.ParsedResults?.[0]?.ParsedText || "";
-    return NextResponse.json(
-      {
-        success: true,
-        markdown_result: parsedText,
-        raw_result: fallbackJson,
-        used_provider: "fallback",
-      },
-      { headers: { 'x-api-used': 'fallback' } }
-    );
   } catch (error) {
     console.error("❌ OCR API error:", error);
     return NextResponse.json(
-      { error: "Both services unavailable. Please try again later." },
+      { error: error instanceof Error ? error.message : "OCR service unavailable. Please try again later." },
       { status: 503 }
     );
   }
 }
-

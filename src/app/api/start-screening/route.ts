@@ -76,9 +76,6 @@ export async function POST(req: NextRequest) {
         email: user.email!,
       });
     } else {
-      // DISABLED FOR TESTING: Usage limit checks commented out
-      // TODO: Re-enable these checks before production deployment
-      /*
       // Check limits
       if (profile.monthly_usage_count >= profile.max_monthly_screenings) {
         return NextResponse.json(
@@ -97,7 +94,6 @@ export async function POST(req: NextRequest) {
           { status: 403 }
         );
       }
-      */
     }
 
     // Create screening job
@@ -198,4 +194,3 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-

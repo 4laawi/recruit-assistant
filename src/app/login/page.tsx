@@ -107,7 +107,7 @@ export default function LoginPage() {
           <CardHeader className="text-center pb-6">
             <div className="flex justify-center mb-4">
               <Image 
-                src="/@LOGO-black.png" 
+                src="/LOGO-black.png" 
                 alt="Recruit Assistant Logo" 
                 width={64} 
                 height={64}
