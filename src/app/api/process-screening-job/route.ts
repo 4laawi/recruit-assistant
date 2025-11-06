@@ -89,8 +89,8 @@ async function performAIScreening(
         job_title: jobData.job_title,
         title: jobData.job_title,
         required_skills: jobData.required_skills,
-        years_experience: jobData.years_experience,
-        experience_level: jobData.years_experience,
+        years_experience: parseInt(jobData.years_experience) || 0,
+        experience_level: parseInt(jobData.years_experience) || 0,
         job_description: jobData.job_description || "",
       },
     });

@@ -28,6 +28,10 @@ import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabaseClient'
 import { useToast } from "@/components/ui/use-toast"
 
+interface SupabaseError {
+  message: string
+}
+
 export default function SettingsPage() {
   const { user, signOut } = useAuth()
   const { toast } = useToast()
@@ -58,14 +62,6 @@ export default function SettingsPage() {
     pushScreeningComplete: true,
     pushHighMatch: false
   })
-  
-  // Screening Preferences
-  const [preferences, setPreferences] = useState({
-    autoArchiveCompleted: true,
-    requireApproval: false,
-    defaultLanguage: 'en',
-    timezone: 'America/Los_Angeles'
-  })
 
   const handleSaveProfile = async () => {
     try {
@@ -87,10 +83,11 @@ export default function SettingsPage() {
         title: "✓ Profile Updated",
         description: "Your profile has been saved successfully",
       })
-    } catch (error: any) {
+    } catch (error) {
+      const err = error as SupabaseError
       toast({
         title: "Error",
-        description: error.message || "Failed to update profile",
+        description: err.message || "Failed to update profile",
         variant: "destructive",
       })
     } finally {
@@ -167,10 +164,11 @@ export default function SettingsPage() {
         newPassword: '',
         confirmPassword: ''
       })
-    } catch (error: any) {
+    } catch (error) {
+      const err = error as SupabaseError
       toast({
         title: "Error",
-        description: error.message || "Failed to update password",
+        description: err.message || "Failed to update password",
         variant: "destructive",
       })
     } finally {
@@ -584,4 +582,3 @@ export default function SettingsPage() {
     </div>
   )
 }
-

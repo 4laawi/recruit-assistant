@@ -89,28 +89,28 @@ export default function ReportsPage() {
   })
 
   useEffect(() => {
+    const loadReports = async () => {
+      try {
+        setIsLoading(true)
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        // Data is already set in useState
+      } catch (error) {
+        console.error('Error loading reports:', error)
+        toast({
+          title: "Error",
+          description: "Failed to load reports",
+          variant: "destructive",
+        })
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
     if (user) {
       loadReports()
     }
-  }, [user, timeRange])
-
-  const loadReports = async () => {
-    try {
-      setIsLoading(true)
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      // Data is already set in useState
-    } catch (error) {
-      console.error('Error loading reports:', error)
-      toast({
-        title: "Error",
-        description: "Failed to load reports",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  }, [user, timeRange, toast])
 
   const handleExportReport = () => {
     toast({
@@ -406,4 +406,3 @@ export default function ReportsPage() {
     </div>
   )
 }
-

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -69,73 +69,69 @@ export default function JobListingsPage() {
     status: 'active'
   })
 
-  const loadJobs = useCallback(() => {
+  useEffect(() => {
+    const loadJobsInternal = async () => {
+      try {
+        setIsLoading(true)
+        
+        // Mock data for now - replace with actual Supabase query
+        const mockJobs: Job[] = [
+          {
+            id: '1',
+            title: 'Senior Frontend Developer',
+            description: 'Looking for an experienced React developer to join our team...',
+            location: 'San Francisco, CA',
+            work_location: 'hybrid',
+            experience_level: 'senior',
+            required_skills: ['React', 'TypeScript', 'Next.js', 'Tailwind CSS'],
+            status: 'active',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            applications_count: 24
+          },
+          {
+            id: '2',
+            title: 'Full Stack Engineer',
+            description: 'Join our growing startup as a full stack engineer...',
+            location: 'Remote',
+            work_location: 'remote',
+            experience_level: 'mid',
+            required_skills: ['Node.js', 'React', 'PostgreSQL', 'AWS'],
+            status: 'active',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            applications_count: 18
+          },
+          {
+            id: '3',
+            title: 'DevOps Engineer',
+            description: 'Seeking a DevOps expert to manage our infrastructure...',
+            location: 'New York, NY',
+            work_location: 'on-site',
+            experience_level: 'senior',
+            required_skills: ['Docker', 'Kubernetes', 'AWS', 'Terraform'],
+            status: 'active',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            applications_count: 12
+          }
+        ]
+        
+        setJobs(mockJobs)
+      } catch (error) {
+        console.error('Error loading jobs:', error)
+        toast({
+          title: "Error",
+          description: "Failed to load job listings",
+          variant: "destructive",
+        })
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
     if (user) {
       loadJobsInternal()
-    }
-  }, [user])
-
-  useEffect(() => {
-    loadJobs()
-  }, [loadJobs])
-
-  const loadJobsInternal = useCallback(async () => {
-    try {
-      setIsLoading(true)
-      
-      // Mock data for now - replace with actual Supabase query
-      const mockJobs: Job[] = [
-        {
-          id: '1',
-          title: 'Senior Frontend Developer',
-          description: 'Looking for an experienced React developer to join our team...',
-          location: 'San Francisco, CA',
-          work_location: 'hybrid',
-          experience_level: 'senior',
-          required_skills: ['React', 'TypeScript', 'Next.js', 'Tailwind CSS'],
-          status: 'active',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          applications_count: 24
-        },
-        {
-          id: '2',
-          title: 'Full Stack Engineer',
-          description: 'Join our growing startup as a full stack engineer...',
-          location: 'Remote',
-          work_location: 'remote',
-          experience_level: 'mid',
-          required_skills: ['Node.js', 'React', 'PostgreSQL', 'AWS'],
-          status: 'active',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          applications_count: 18
-        },
-        {
-          id: '3',
-          title: 'DevOps Engineer',
-          description: 'Seeking a DevOps expert to manage our infrastructure...',
-          location: 'New York, NY',
-          work_location: 'on-site',
-          experience_level: 'senior',
-          required_skills: ['Docker', 'Kubernetes', 'AWS', 'Terraform'],
-          status: 'active',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          applications_count: 12
-        }
-      ]
-      
-      setJobs(mockJobs)
-    } catch (error) {
-      console.error('Error loading jobs:', error)
-      toast({
-        title: "Error",
-        description: "Failed to load job listings",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
     }
   }, [user, toast])
 
