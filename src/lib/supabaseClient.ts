@@ -2,7 +2,7 @@
 
 import { createClient } from '@supabase/supabase-js'
 
-// Validate required environment variables
+// Safe environment variable access to prevent build-time errors
 function getSupabaseUrl(): string {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   if (!url) {
@@ -19,7 +19,7 @@ function getSupabaseAnonKey(): string {
   return key;
 }
 
-// Create Supabase client with validation
+// Create Supabase client
 export const supabase = createClient(
   getSupabaseUrl(),
   getSupabaseAnonKey()

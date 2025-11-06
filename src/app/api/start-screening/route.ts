@@ -2,40 +2,32 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { StartScreeningRequest } from "@/types/database";
 
-// Validate required environment variables
-function getSupabaseUrl(): string {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  if (!url) {
-    throw new Error(
-      "NEXT_PUBLIC_SUPABASE_URL is required. Please check your environment variables."
-    );
+// Runtime Supabase client creation to prevent build-time errors
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error('Required environment variables are missing. Please check your environment variables.');
   }
-  return url;
+  
+  return createClient(
+    supabaseUrl,
+    serviceRoleKey,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    }
+  );
 }
-
-function getSupabaseServiceRoleKey(): string {
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!key) {
-    throw new Error(
-      "SUPABASE_SERVICE_ROLE_KEY is required. Please check your environment variables."
-    );
-  }
-  return key;
-}
-
-const supabaseAdmin = createClient(
-  getSupabaseUrl(),
-  getSupabaseServiceRoleKey(),
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  }
-);
 
 export async function POST(req: NextRequest) {
   try {
+    // Create Supabase client at runtime
+    const supabaseAdmin = getSupabaseClient();
+    
     // Get auth token from header
     const authHeader = req.headers.get("authorization");
     if (!authHeader) {

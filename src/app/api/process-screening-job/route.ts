@@ -29,39 +29,33 @@ interface CandidateStatus {
   status: string;
 }
 
-// Validate required environment variables
-function getSupabaseUrl(): string {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  if (!url) {
-    throw new Error('NEXT_PUBLIC_SUPABASE_URL is required. Please check your environment variables.');
+// Runtime Supabase client creation to prevent build-time errors
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error('Required environment variables are missing. Please check your environment variables.');
   }
-  return url;
+  
+  return createClient(
+    supabaseUrl,
+    serviceRoleKey,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    }
+  );
 }
-
-function getSupabaseServiceRoleKey(): string {
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!key) {
-    throw new Error('SUPABASE_SERVICE_ROLE_KEY is required. Please check your environment variables.');
-  }
-  return key;
-}
-
-const supabaseAdmin = createClient(
-  getSupabaseUrl(),
-  getSupabaseServiceRoleKey(),
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  }
-);
 
 export const maxDuration = 300; // 5 minutes max execution time
 
 async function convertPDFToBase64(filePath: string): Promise<string> {
   try {
     // Download file from Supabase Storage
+    const supabaseAdmin = getSupabaseClient();
     const { data, error } = await supabaseAdmin.storage
       .from("resumes")
       .download(filePath);
@@ -154,6 +148,9 @@ async function processCandidate(
   try {
     console.log(`Processing candidate: ${candidate.filename}`);
 
+    // Create Supabase client at runtime
+    const supabaseAdmin = getSupabaseClient();
+
     // Update status to processing
     await supabaseAdmin
       .from("candidates")
@@ -212,6 +209,9 @@ async function processCandidate(
   } catch (error) {
     console.error(`❌ Error processing candidate ${candidate.filename}:`, error);
 
+    // Create Supabase client for error handling
+    const supabaseAdmin = getSupabaseClient();
+
     // Mark as failed
     await supabaseAdmin
       .from("candidates")
@@ -231,6 +231,9 @@ async function processCandidate(
 
 export async function POST(req: NextRequest) {
   try {
+    // Create Supabase client at runtime
+    const supabaseAdmin = getSupabaseClient();
+    
     // Get auth token from header
     const authHeader = req.headers.get("authorization");
     if (!authHeader) {
