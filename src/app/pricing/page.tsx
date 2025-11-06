@@ -395,7 +395,7 @@ export default function PricingPage() {
             Compare Plans
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
-            See exactly what's included in each plan
+            See exactly what&apos;s included in each plan
           </p>
         </motion.div>
 

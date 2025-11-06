@@ -98,9 +98,10 @@ async function performAIScreening(
     console.log(`✅ AI screening completed. Provider: ${result.used_provider}, Score: ${result.score}`);
     
     // Return in format expected by processCandidate (with extracted_info for compatibility)
+    const scoreNumber = parseFloat(String(result.score)) || 0;
     return {
-      match_score: Number(result.score) || 0,
-      score: Number(result.score) || 0,
+      match_score: scoreNumber,
+      score: scoreNumber,
       strengths: result.skills_found?.length ? 
         [`Found ${result.skills_found.length} required skills`] :
         [],

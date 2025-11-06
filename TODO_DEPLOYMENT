@@ -1,0 +1,14 @@
+- [x] Analyze the current build errors from Vercel deployment
+- [x] Run local build to identify specific TypeScript/linting issues
+- [x] Fix TypeScript compilation errors in process-screening-job/route.ts
+- [x] Fix any linting issues in process-screening-job/route.ts
+- [x] Fix remaining type conversion issues in process-screening-job/route.ts
+- [x] Test the build to verify fixes
+- [x] Fix unescaped entities errors in api-testing page
+- [ ] Fix unescaped entities errors in pricing page
+- [ ] Fix `any` type errors in dashboard files
+- [ ] Fix `any` type errors in api.ts
+- [ ] Fix unused import warnings
+- [ ] Ensure all imports and dependencies are correct
+- [ ] Final build test
+- [ ] Deploy again to verify successful deployment

@@ -299,14 +299,14 @@ export default function APITestingPage() {
           </Label>
           <Textarea
             id="cvContent"
-            placeholder="Paste the candidate&apos;s resume text here..."
+            placeholder="Paste the candidate's resume text here..."
             value={cvContent}
             onChange={(e) => setCvContent(e.target.value)}
             rows={15}
             className="resize-none font-mono text-sm min-h-[250px]"
           />
           <p className="text-xs text-muted-foreground">
-            Paste the full text content of the candidate&apos;s resume
+            Paste the full text content of the candidate's resume
           </p>
         </CardContent>
       </Card>
