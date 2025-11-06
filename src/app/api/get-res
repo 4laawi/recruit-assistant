@@ -1,0 +1,16 @@
+import { NextRequest, NextResponse } from "next/server";
+
+export async function GET(req: NextRequest) {
+  try {
+    return NextResponse.json({
+      success: true,
+      message: "Service temporarily disabled for deployment",
+      data: null,
+    });
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Service temporarily unavailable" },
+      { status: 503 }
+    );
+  }
+}
