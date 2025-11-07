@@ -11,12 +11,13 @@ import Link from "next/link"
 import Image from "next/image"
 import { useAuth } from "@/contexts/AuthContext"
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import Navbar from "@/components/Navbar"
 
 export default function LoginPage() {
   const { user, signInWithGoogle, signInWithEmail, signUpWithEmail, loading } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [isSignUp, setIsSignUp] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -29,6 +30,14 @@ export default function LoginPage() {
       router.push('/dashboard')
     }
   }, [user, router])
+
+  useEffect(() => {
+    // Check if signup parameter is present in URL
+    const signup = searchParams.get('signup')
+    if (signup === '1') {
+      setIsSignUp(true)
+    }
+  }, [searchParams])
 
   const handleGoogleSignIn = async () => {
     try {

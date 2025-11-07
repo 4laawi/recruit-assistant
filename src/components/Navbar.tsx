@@ -161,6 +161,7 @@ export default function Navbar() {
                 </motion.div>
                 <Link href="/login?signup=1">
                   <motion.div
+                    className="hidden sm:flex"
                     variants={buttonVariants}
                     initial="initial"
                     whileHover="hover"
