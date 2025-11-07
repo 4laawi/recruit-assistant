@@ -10,14 +10,14 @@ import LoadingLogo from "@/components/LoadingLogo"
 import Link from "next/link"
 import Image from "next/image"
 import { useAuth } from "@/contexts/AuthContext"
-import { useEffect, useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useEffect, useState, Suspense } from "react"
+import { useRouter } from "next/navigation"
 import Navbar from "@/components/Navbar"
+import SearchParamsHandler from "@/components/SearchParamsHandler"
 
 export default function LoginPage() {
   const { user, signInWithGoogle, signInWithEmail, signUpWithEmail, loading } = useAuth()
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [isSignUp, setIsSignUp] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -30,14 +30,6 @@ export default function LoginPage() {
       router.push('/dashboard')
     }
   }, [user, router])
-
-  useEffect(() => {
-    // Check if signup parameter is present in URL
-    const signup = searchParams.get('signup')
-    if (signup === '1') {
-      setIsSignUp(true)
-    }
-  }, [searchParams])
 
   const handleGoogleSignIn = async () => {
     try {
@@ -90,6 +82,13 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <Navbar />
+      <Suspense fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <LoadingLogo size={48} />
+        </div>
+      }>
+        <SearchParamsHandler onSignupChange={setIsSignUp} />
+      </Suspense>
       <div className="flex items-center justify-center p-4 pt-24">
         <div className="w-full max-w-md">
         {/* Back Button */}
